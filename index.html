@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RENDER WORKS | SOFA AR</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background-color: #fff; }
+        
+        /* 3D表示エリア */
+        model-viewer {
+            width: 100%;
+            height: 70vh; /* 画面の7割を3Dに */
+            background-color: #f5f5f5;
+            --poster-color: transparent;
+        }
+
+        /* 操作パネル */
+        .ui-container {
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .color-title {
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 30px;
+        }
+
+        /* 丸いボタンのスタイル */
+        .color-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover .swatch { transform: scale(1.1); }
+        
+        .green-bg { background-color: #4f7942; }
+        .white-bg { background-color: #f5f5f5; }
+
+        .label { font-size: 10px; font-weight: bold; color: #333; }
+
+        /* ARボタン（モデルの上に浮かせる） */
+        #ar-button {
+            background-color: white;
+            border-radius: 20px;
+            border: 1px solid #333;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 25px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <model-viewer 
+        id="sofa-viewer"
+        src="sofagreen.glb" 
+        ios-src="sofagreen.usdz"
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        camera-controls 
+        shadow-intensity="1"
+        environment-image="neutral"
+        exposure="1"
+        touch-action="pan-y">
+        
+        <button slot="ar-button" id="ar-button">
+            VIEW IN AR
+        </button>
+    </model-viewer>
+
+    <div class="ui-container">
+        <div class="color-title">SELECT MATERIAL</div>
+        <div class="controls">
+            <div class="color-option" onclick="changeColor('green.jpg')">
+                <div class="swatch green-bg"></div>
+                <span class="label">GREEN</span>
+            </div>
+            <div class="color-option" onclick="changeColor('be.jpg')">
+                <div class="swatch white-bg"></div>
+                <span class="label">WHITE</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modelViewer = document.querySelector('#sofa-viewer');
+
+        async function changeColor(textureFile) {
+            // モデルの読み込み完了を待ってから処理
+            const material = modelViewer.model.materials.find(m => m.name === 'fabric');
+            
+            if (material) {
+                // 新しいテクスチャを作成
+                const texture = await modelViewer.createTexture(textureFile);
+                // fabricマテリアルのベースカラーに適用
+                if (material.pbrMetallicRoughness.baseColorTexture) {
+                    material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                } else {
+                    // テクスチャが設定されていない場合でも新規適用
+                    material.pbrMetallicRoughness.setBaseColorTexture(texture);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
